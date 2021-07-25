@@ -5,5 +5,6 @@ import (
 )
 
 func main() {
+	foo := "unused"
 	mpnasne.Do()
 }

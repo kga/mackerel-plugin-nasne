@@ -1,8 +1,10 @@
 package mpnasne
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -34,7 +36,7 @@ func (p *NasnePlugin) GraphDefinition() map[string]mp.Graphs {
 
 	err := p.fetchHddInfoList()
 	if err != nil {
-		fmt.Errorf("fail to fetchHddList: %s")
+		log.Printf("fail to fetchHddList: %s", err)
 		return nil
 	}
 
@@ -116,20 +118,18 @@ func (p *NasnePlugin) fetchHddInfoList() error {
 	}
 
 	// 一覧を取得
-	hddList, err := p.nasneClient.Status.HDDListGet(nil)
+	hddList, err := p.nasneClient.Status.HDDListGet(context.TODO())
 	if err != nil {
-		fmt.Errorf("fail to HDDListGet: %s")
-		return err
+		return fmt.Errorf("fail to HDDListGet: %s", err)
 	}
 
 	// 各詳細を取得
 	hddCount := hddList.Number
 	hddInfoList = make([](*nasne.HDDInfo), hddCount)
 	for i, hdd := range hddList.Hdd {
-		hddInfoList[i], err = p.nasneClient.Status.HDDInfoGet(nil, hdd.ID)
+		hddInfoList[i], err = p.nasneClient.Status.HDDInfoGet(context.TODO(), hdd.ID)
 		if err != nil {
-			fmt.Errorf("fail to HDDInfoGet(%d): %s", hdd.ID)
-			return err
+			return fmt.Errorf("fail to HDDInfoGet(%d): %s", hdd.ID, err)
 		}
 	}
 	return nil
@@ -139,20 +139,18 @@ func (p *NasnePlugin) getRecordedCount() (float64, error) {
 	args := &nasne.RecordedTitleListArgs{
 		RequestedCount: 1,
 	}
-	titleList, err := p.nasneClient.Recorded.TitleListGet(nil, args)
+	titleList, err := p.nasneClient.Recorded.TitleListGet(context.TODO(), args)
 	if err != nil {
 		// エラーだったどうするのが正解なんだろう
-		fmt.Errorf("fail to TitleListGet: %s")
-		return 0, err
+		return 0, fmt.Errorf("fail to TitleListGet: %s", err)
 	}
 	return float64(titleList.TotalMatches), nil
 }
 
 func (p *NasnePlugin) getRecordFailNum() (float64, error) {
-	recNgList, err := p.nasneClient.Status.RecNgListGet(nil)
+	recNgList, err := p.nasneClient.Status.RecNgListGet(context.TODO())
 	if err != nil {
-		fmt.Errorf("fail to RecNgListGet: %s")
-		return 0, err
+		return 0, fmt.Errorf("fail to RecNgListGet: %s", err)
 	}
 	return float64(recNgList.Number), nil
 }
@@ -175,8 +173,7 @@ func Do() {
 
 	nasneClient, err := nasne.NewClient(flag.Args()[0], nil)
 	if err != nil {
-		fmt.Errorf("fail to nasne client: %s")
-		os.Exit(1)
+		log.Fatalf("fail to nasne client: %s", err)
 	}
 
 	mp.NewMackerelPlugin(&NasnePlugin{

@@ -120,7 +120,7 @@ func (p *NasnePlugin) fetchHddInfoList() error {
 	// 一覧を取得
 	hddList, err := p.nasneClient.Status.HDDListGet(context.TODO())
 	if err != nil {
-		return fmt.Errorf("fail to HDDListGet: %s", err)
+		return fmt.Errorf("fail to HDDListGet: %w", err)
 	}
 
 	// 各詳細を取得
@@ -129,7 +129,7 @@ func (p *NasnePlugin) fetchHddInfoList() error {
 	for i, hdd := range hddList.Hdd {
 		hddInfoList[i], err = p.nasneClient.Status.HDDInfoGet(context.TODO(), hdd.ID)
 		if err != nil {
-			return fmt.Errorf("fail to HDDInfoGet(%d): %s", hdd.ID, err)
+			return fmt.Errorf("fail to HDDInfoGet(%d): %w", hdd.ID, err)
 		}
 	}
 	return nil
@@ -142,7 +142,7 @@ func (p *NasnePlugin) getRecordedCount() (float64, error) {
 	titleList, err := p.nasneClient.Recorded.TitleListGet(context.TODO(), args)
 	if err != nil {
 		// エラーだったどうするのが正解なんだろう
-		return 0, fmt.Errorf("fail to TitleListGet: %s", err)
+		return 0, fmt.Errorf("fail to TitleListGet: %w", err)
 	}
 	return float64(titleList.TotalMatches), nil
 }
@@ -150,7 +150,7 @@ func (p *NasnePlugin) getRecordedCount() (float64, error) {
 func (p *NasnePlugin) getRecordFailNum() (float64, error) {
 	recNgList, err := p.nasneClient.Status.RecNgListGet(context.TODO())
 	if err != nil {
-		return 0, fmt.Errorf("fail to RecNgListGet: %s", err)
+		return 0, fmt.Errorf("fail to RecNgListGet: %w", err)
 	}
 	return float64(recNgList.Number), nil
 }
